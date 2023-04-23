@@ -23,8 +23,8 @@ class SentencesViewModelTest {
     )
 
     @Test
-    fun `fetch all sentences in order`() = runTest {
-        val expected = listOf("Hello!", "Nice to see you.", "Greetings, from AM23")
+    fun `should change state from loading to most recent sentence`() = runTest {
+        val expected = "Greetings, from AM23"
 
         val initialSentence = sentencesViewModel.sentencesState.value
         initialSentence shouldBeEqualTo "Loading"
@@ -32,13 +32,7 @@ class SentencesViewModelTest {
         sentencesViewModel.fetchSentences()
         runCurrent()
 
-        val firstSentence = sentencesViewModel.sentencesState.value
-        firstSentence shouldBeEqualTo expected[0]
-
-        val secondSentence = sentencesViewModel.sentencesState.value
-        secondSentence shouldBeEqualTo expected[1]
-
-        val thirdSentence = sentencesViewModel.sentencesState.value
-        thirdSentence shouldBeEqualTo expected[2]
+        val mostRecentSentence = sentencesViewModel.sentencesState.value
+        mostRecentSentence shouldBeEqualTo expected
     }
 }
