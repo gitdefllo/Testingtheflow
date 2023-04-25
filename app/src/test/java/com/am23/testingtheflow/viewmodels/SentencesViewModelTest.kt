@@ -4,10 +4,14 @@ import com.am23.testingtheflow.usecases.FetchSentencesUseCase
 import com.am23.testingtheflow.usecases.FetchSentencesWithDelayUseCase
 import com.am23.testingtheflow.utils.MainDispatcherRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeInstanceOf
 import org.junit.Rule
 import org.junit.Test
 
@@ -34,5 +38,24 @@ class SentencesViewModelTest {
 
         val mostRecentSentence = sentencesViewModel.sentencesState.value
         mostRecentSentence shouldBeEqualTo expected
+    }
+
+    @Test
+    fun `fetch all sentences in order`() = runTest {
+        val expected = listOf("Hello!", "Nice to see you.", "Greetings, from AM23")
+        val sentences = mutableListOf<String>()
+
+        sentencesViewModel.sentencesState
+            .onEach { sentences.add(it) }
+            .flowOn(UnconfinedTestDispatcher(testScheduler))
+            .launchIn(backgroundScope)
+
+        sentencesViewModel.fetchSentences()
+        advanceUntilIdle()
+
+        sentences[0] shouldBeEqualTo "Loading"
+        sentences[1] shouldBeEqualTo expected[0]
+        sentences[2] shouldBeEqualTo expected[1]
+        sentences[3] shouldBeEqualTo expected[2]
     }
 }
