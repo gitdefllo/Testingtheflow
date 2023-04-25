@@ -1,6 +1,7 @@
 package com.am23.testingtheflow.viewmodels
 
 import app.cash.turbine.test
+import app.cash.turbine.testIn
 import com.am23.testingtheflow.usecases.FetchSentencesUseCase
 import com.am23.testingtheflow.usecases.FetchSentencesWithDelayUseCase
 import com.am23.testingtheflow.utils.MainDispatcherRule
@@ -83,5 +84,33 @@ class SentencesViewModelTurbineTest {
 
             ensureAllEventsConsumed()
         }
+    }
+
+    @Test
+    fun `fetch all sentences in turbine`() = runTest {
+        val expected = listOf("Hello!", "Nice to see you.", "Greetings, from AM23")
+
+        val sentencesStateTurbine = sentencesViewModel.sentencesState.testIn(backgroundScope)
+        val sentencesDelayStateTurbine = sentencesViewModel.sentencesDelayState.testIn(backgroundScope)
+
+        sentencesViewModel.fetchSentences()
+        sentencesViewModel.fetchSentencesWithDelay()
+
+        sentencesStateTurbine.run {
+            awaitItem() shouldBeEqualTo "Loading"
+            awaitItem() shouldBeEqualTo expected[0]
+            awaitItem() shouldBeEqualTo expected[1]
+            awaitItem() shouldBeEqualTo expected[2]
+        }
+
+        sentencesDelayStateTurbine.run {
+            awaitItem() shouldBeEqualTo "Loading"
+            awaitItem() shouldBeEqualTo expected[0]
+            awaitItem() shouldBeEqualTo expected[1]
+            awaitItem() shouldBeEqualTo expected[2]
+        }
+
+        sentencesStateTurbine.ensureAllEventsConsumed()
+        sentencesDelayStateTurbine.ensureAllEventsConsumed()
     }
 }
