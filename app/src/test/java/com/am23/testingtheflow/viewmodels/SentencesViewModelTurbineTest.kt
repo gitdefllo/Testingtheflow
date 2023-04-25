@@ -52,4 +52,36 @@ class SentencesViewModelTurbineTest {
             ensureAllEventsConsumed()
         }
     }
+
+    @Test
+    fun `should change state from loading to most recent sentence with delay in turbine`() = runTest {
+        val expected = "Greetings, from AM23"
+
+        sentencesViewModel.sentencesState.test {
+            sentencesViewModel.fetchSentences()
+
+            awaitItem() shouldBeEqualTo "Loading"
+
+            delay(100.milliseconds)
+            expectMostRecentItem() shouldBeEqualTo expected
+
+            ensureAllEventsConsumed()
+        }
+    }
+
+    @Test
+    fun `fetch all sentences in order with delay in turbine`() = runTest {
+        val expected = listOf("Hello!", "Nice to see you.", "Greetings, from AM23")
+
+        sentencesViewModel.sentencesDelayState.test {
+            sentencesViewModel.fetchSentencesWithDelay()
+
+            awaitItem() shouldBeEqualTo "Loading"
+            awaitItem() shouldBeEqualTo expected[0]
+            awaitItem() shouldBeEqualTo expected[1]
+            awaitItem() shouldBeEqualTo expected[2]
+
+            ensureAllEventsConsumed()
+        }
+    }
 }

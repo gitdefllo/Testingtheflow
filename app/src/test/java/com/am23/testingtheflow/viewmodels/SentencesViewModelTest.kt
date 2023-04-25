@@ -58,4 +58,37 @@ class SentencesViewModelTest {
         sentences[2] shouldBeEqualTo expected[1]
         sentences[3] shouldBeEqualTo expected[2]
     }
+
+    @Test
+    fun `should change state from loading to most recent sentence with delay`() = runTest {
+        val expected = "Greetings, from AM23"
+
+        val initialSentence = sentencesViewModel.sentencesState.value
+        initialSentence shouldBeEqualTo "Loading"
+
+        sentencesViewModel.fetchSentences()
+        runCurrent()
+
+        val mostRecentSentence = sentencesViewModel.sentencesState.value
+        mostRecentSentence shouldBeEqualTo expected
+    }
+
+    @Test
+    fun `fetch all sentences in order with delay`() = runTest {
+        val expected = listOf("Hello!", "Nice to see you.", "Greetings, from AM23")
+        val sentences = mutableListOf<String>()
+
+        sentencesViewModel.sentencesDelayState
+            .onEach { sentences.add(it) }
+            .flowOn(UnconfinedTestDispatcher(testScheduler))
+            .launchIn(backgroundScope)
+
+        sentencesViewModel.fetchSentencesWithDelay()
+        advanceUntilIdle()
+
+        sentences[0] shouldBeEqualTo "Loading"
+        sentences[1] shouldBeEqualTo expected[0]
+        sentences[2] shouldBeEqualTo expected[1]
+        sentences[3] shouldBeEqualTo expected[2]
+    }
 }
